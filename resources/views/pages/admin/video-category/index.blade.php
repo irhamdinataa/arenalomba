@@ -1,0 +1,157 @@
+@extends('layouts.admin')
+
+@section('title')
+    Kategori
+@endsection
+
+@section('container')
+    <main>
+        <header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+            <div class="container-xl px-4">
+                <div class="page-header-content pt-4">
+                    <div class="row align-items-center justify-content-between">
+                        <div class="col-auto mt-4">
+                            <h1 class="page-header-title">
+                                <div class="page-header-icon">
+                                    <i data-feather="film"></i>
+                                </div>
+                                Kategori
+                            </h1>
+                            <div class="page-header-subtitle">List Kategori</div>
+                        </div>
+                    </div>
+                    <nav class="mt-4 rounded" aria-label="breadcrumb">
+                        <ol class="breadcrumb px-3 py-2 rounded mb-0">
+                            <li class="breadcrumb-item"><a href="{{ route('admin-dashboard') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item">Video</li>
+                            <li class="breadcrumb-item active">Kategori</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </header>
+        <!-- Main page content-->
+        <div class="container-xl px-4 mt-n10">
+            <div class="row">
+                <div class="col-lg-4">
+                    <div class="card mb-4">
+                        <div class="card-header">Tambah Kategori Baru</div>
+                        <div class="card-body">
+                            <form action="{{ route('video-category.store') }}" method="post" autocomplete="off" enctype="multipart/form-data">
+                                @csrf
+                                <div class="mb-3">
+                                    <label for="name">Nama</label>
+                                    <input class="form-control" name="name" type="text" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="name">Kategori Induk</label>
+                                    <select name="parent_id" class="form-control sub-category">
+                                        <option value="">Tidak ada</option>
+                                        @if ($categories)
+                                            @foreach($categories as $category)
+                                                <?php $dash=''; ?>
+                                                <option value="{{$category->id}}">{{$category->name}}</option>
+                                                @if(count($category->subcategory))
+                                                    @include('pages.admin.video-category.create-sub-category',['subcategories' => $category->subcategory])
+                                                @endif
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <button type="submit" class="btn btn-md btn-primary">Tambah Kategori Baru</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <div class="card mb-4">
+                        <div class="card-header">List Kategori</div>
+                        <div class="card-body">
+                            {{-- Alert --}}
+                            @if (session()->has('success'))
+                                <div class="alert alert-success alert-dismissible fade show hide-alert" role="alert">
+                                    {{ session('success') }}
+                                    <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            @endif
+                            @if ($errors->any())
+                                <div class="alert alert-danger alert-dismissible fade show hide-alert" role="alert">
+                                    <ul>
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                    <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            @endif
+                            {{-- List Data --}}
+                            <table class="table table-sm table-striped" id="crudTable">
+                                <thead>
+                                    <tr>
+                                        <th width="10" class="text-center">No.</th>
+                                        <th data-orderable="false">Nama</th>
+                                        <th data-orderable="false">Slug</th>
+                                        <th data-orderable="false" class="text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @php
+                                        $no=1;
+                                    @endphp
+                                    @foreach ($categories as $category)
+                                        <tr>
+                                            <td class="text-center">{{ $no++; }}</td>
+                                            <td>{{ $category->name }}</td>
+                                            <td>{{ $category->slug }}</td>
+                                            <td class="text-center">
+                                                <div class="dropdown">
+                                                    <button class="btn btn-primary dropdown-toggle btn-sm" id="dropdownFadeInUp" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <i class="fas fa-user-cog"></i></button>
+                                                    <div class="dropdown-menu animated--fade-in-up" aria-labelledby="dropdownFadeInUp">
+                                                        <a class="dropdown-item" href="{{ route('video-category.edit', $category->id) }}">Edit</a>
+                                                        <form action="{{ route('video-category.destroy', $category->id) }}" method="POST" id="deleteForm{{ $category->id }}">
+                                                            @method('delete')
+                                                            @csrf
+                                                            <button class="dropdown-item btn-delete" data-form-id="deleteForm{{ $category->id }}">
+                                                            Hapus
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>                                    
+                                        @if(count($category->subcategory))
+                                            @include('pages.admin.video-category.list-sub-category',['subcategories' => $category->subcategory])
+                                        @endif
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>           
+        </div>
+    </main>
+@endsection
+
+@push('addon-style')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.1.1/dist/select2-bootstrap-5-theme.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+@endpush
+
+@push('addon-script')
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+    $('#crudTable').DataTable({
+        "responsive": true,
+        "autoWidth": false,
+        "ordering": false,
+    });    
+
+    $(".sub-category").select2({
+        theme: "bootstrap-5",
+    });
+  </script>
+@endpush
